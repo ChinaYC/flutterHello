@@ -16,7 +16,6 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Namer App',
         theme: ThemeData(
-          useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         ),
         home: MyHomePage(),
@@ -28,27 +27,45 @@ class MyApp extends StatelessWidget {
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
 
+  // 新增方法：更新随机词并通知监听器
   void getNext() {
     current = WordPair.random();
+    notifyListeners(); // 关键：通知UI刷新
+  }
+
+  var favorites = <WordPair>[];
+
+  void toggleFavorite() {
+    if (favorites.contains(current)) {
+      favorites.remove(current);
+    } else {
+      favorites.add(current);
+    }
     notifyListeners();
   }
 }
 
 class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    var pair = appState.current;
 
     return Scaffold(
+      appBar: AppBar(title: Text('Namer App')),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('A random AWESOME idea:'),
-            Text(pair.asLowerCase),
+            Text('A random idea:'),
+            Text(appState.current.asLowerCase),
+
+            BigCard(pair: appState.current),
+
             ElevatedButton(
               onPressed: () {
+                debugPrint("HELLO:${appState.current.asLowerCase}");
+
                 appState.getNext();
               },
               child: Text('Next'),
@@ -57,5 +74,31 @@ class MyHomePage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class BigCard extends StatelessWidget {
+  const BigCard({super.key, required this.pair});
+
+  final WordPair pair;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
+
+    return Card(
+      color: theme.colorScheme.primary,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(pair.asLowerCase, style: style),
+      ),
+    );
+    // return Text(
+    //   pair.asLowerCase,
+    //   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold), // 优化样式
+    // );
   }
 }
